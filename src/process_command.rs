@@ -17,7 +17,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
     let mut w: u64;
 
     // Loop over amount of lines
-    while l < args.amount_of_lines {
+    while l < args.lines {
         // Set word count (back) to 0
         w = 0;
 
