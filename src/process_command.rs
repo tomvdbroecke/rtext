@@ -1,16 +1,21 @@
 // Uses
 use random_word::Lang;
 use crate::Args;
-use std::{fs::File, io::{BufWriter, Write}};
-
+use std::{fs::File, io::{BufWriter, Write}, time::Instant};
+use num_format::{Locale, ToFormattedString};
+use colored::*;
+use bytesize::ByteSize;
 
 // Process command function
 pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
+    // Start keeping track of time
+    let start_time: Instant = Instant::now();
+
     // Create file
     let file = File::create(&args.path)?;
 
     // Wrap file in a BufWriter
-    let mut buf_writer = BufWriter::new(file);
+    let mut buf_writer = BufWriter::new(&file);
 
     // Define variables to keep track of loop
     let mut l: u64 = 0;
@@ -46,6 +51,19 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
         // Go to next line
         l = l + 1;
     }
+
+    // User feedback
+    let s: &str = "Success!";
+    println!(
+        "{} {} {} was generated in {} with {} words split into {} lines of {} words each",
+        s.bold().green(),
+        &args.path.bold(),
+        format!("({})", ByteSize(file.metadata().unwrap().len())).bold(),
+        format!("{:.2?}", start_time.elapsed()).bold(),
+        (&args.lines * &args.words_per_line).to_formatted_string(&Locale::en).bold(),
+        &args.lines.to_formatted_string(&Locale::en).bold(),
+        &args.words_per_line.to_formatted_string(&Locale::en).bold()
+    );
 
     // Return OK
     Ok(())
