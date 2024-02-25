@@ -24,6 +24,7 @@ struct Args {
  * @todo
  * - Give the user some feedback when file has been generated (include filesize? :D)
  * - Add loading bar
+ * - Ask for permission to overwrite if file already exists
  * - Add logging?
  */
 
