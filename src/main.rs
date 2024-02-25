@@ -24,7 +24,7 @@ struct Args {
  * @todo
  * - Ask for permission to overwrite if file already exists
  * - Allow passing word length
- * - Add logging?
+ * - Add logging? (make sure to add progress bar log bridge)
  */
 
 // Main function
