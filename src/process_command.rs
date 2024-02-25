@@ -4,12 +4,19 @@ use crate::Args;
 use std::{fs::File, io::{BufWriter, Write}, time::Instant};
 use num_format::{Locale, ToFormattedString};
 use colored::*;
-use bytesize::ByteSize;
+use indicatif::{ProgressBar, ProgressStyle, ProgressState, DecimalBytes};
 
 // Process command function
 pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
     // Start keeping track of time
     let start_time: Instant = Instant::now();
+
+    // Start progress bar (amount of increments equal to amount of lines)
+    let pb = ProgressBar::new(args.lines);
+    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} lines ({eta})")
+        .unwrap()
+        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .progress_chars("#>-"));
 
     // Create file
     let file = File::create(&args.path)?;
@@ -48,9 +55,15 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
         line.push_str("\n");
         buf_writer.write(line.as_bytes())?;
 
+        // Increment progress bar by 1
+        pb.inc(1);
+
         // Go to next line
         l = l + 1;
     }
+
+    // Make sure progress bar is complete
+    pb.finish();
 
     // User feedback
     let s: &str = "Success!";
@@ -58,7 +71,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
         "{} {} {} was generated in {} with {} words split into {} lines of {} words each",
         s.bold().green(),
         &args.path.bold(),
-        format!("({})", ByteSize(file.metadata().unwrap().len())).bold(),
+        format!("({})", DecimalBytes(file.metadata().unwrap().len())).bold(),
         format!("{:.2?}", start_time.elapsed()).bold(),
         (&args.lines * &args.words_per_line).to_formatted_string(&Locale::en).bold(),
         &args.lines.to_formatted_string(&Locale::en).bold(),

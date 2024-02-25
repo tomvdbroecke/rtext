@@ -22,7 +22,6 @@ struct Args {
 
 /**
  * @todo
- * - Add loading bar
  * - Ask for permission to overwrite if file already exists
  * - Allow passing word length
  * - Add logging?
