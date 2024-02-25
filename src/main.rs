@@ -8,8 +8,8 @@ use anyhow::Result;
 
 // Defaults
 const DEFAULT_PATH: &str = "random.txt";
-const DEFAULT_WORDS_PER_LINE: u64 = 10;
-const DEFAULT_AMOUNT_OF_LINES: u64 = 10;
+const DEFAULT_WORDS_PER_LINE: u64 = 50;
+const DEFAULT_AMOUNT_OF_LINES: u64 = 1000;
 
 // Struct for arguments
 #[derive(Parser)]
@@ -21,6 +21,13 @@ struct Args {
     #[arg(short, long, default_value_t = DEFAULT_AMOUNT_OF_LINES)]
     amount_of_lines: u64,
 }
+
+/**
+ * @todo
+ * - Give the user some feedback when file has been generated (include filesize? :D)
+ * - Add loading bar
+ * - Add logging?
+ */
 
 // Main function
 fn main() -> Result<()> {
