@@ -5,6 +5,7 @@ use std::{fs::File, io::{BufWriter, Write}, time::Instant};
 use num_format::{Locale, ToFormattedString};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressState, DecimalBytes};
+use human_duration::human_duration;
 
 // Process command function
 pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
@@ -12,17 +13,17 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
     let start_time: Instant = Instant::now();
 
     // Start progress bar (amount of increments equal to amount of lines)
-    let pb = ProgressBar::new(args.lines);
+    let pb: ProgressBar = ProgressBar::new(args.lines);
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} lines ({eta})")
         .unwrap()
-        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{}", human_duration(&state.eta())).unwrap())
         .progress_chars("#>-"));
 
     // Create file
-    let file = File::create(&args.path)?;
+    let file: File = File::create(&args.path)?;
 
     // Wrap file in a BufWriter
-    let mut buf_writer = BufWriter::new(&file);
+    let mut buf_writer: BufWriter<&File> = BufWriter::new(&file);
 
     // Define variables to keep track of loop
     let mut l: u64 = 0;
@@ -72,7 +73,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
         s.bold().green(),
         &args.path.bold(),
         format!("({})", DecimalBytes(file.metadata().unwrap().len())).bold(),
-        format!("{:.2?}", start_time.elapsed()).bold(),
+        format!("{}", human_duration(&start_time.elapsed())).bold(),
         (&args.lines * &args.words_per_line).to_formatted_string(&Locale::en).bold(),
         &args.lines.to_formatted_string(&Locale::en).bold(),
         &args.words_per_line.to_formatted_string(&Locale::en).bold()
