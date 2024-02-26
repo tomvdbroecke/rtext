@@ -25,6 +25,7 @@ struct Args {
  * - Ask for permission to overwrite if file already exists
  * - Allow passing word length
  * - Add logging? (make sure to add progress bar log bridge)
+ * - Remove ms in human_duration somehow (maybe make your own crate with options)
  */
 
 // Main function
