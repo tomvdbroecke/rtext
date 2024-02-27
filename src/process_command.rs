@@ -1,14 +1,19 @@
 // Uses
 use random_word::Lang;
 use crate::Args;
-use std::{fs::File, io::{BufWriter, Write}, time::Instant};
+use std::{fs::File, io::{BufWriter, Write}, path::Path, process, time::Instant};
 use num_format::{Locale, ToFormattedString};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressState, DecimalBytes};
-use human_duration::human_duration;
+use compound_duration::format_dhms;
+use dialoguer::Confirm;
+use anyhow::Error;
 
 // Process command function
-pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
+pub(crate) fn process_command(args: Args) -> Result<(), Error> {
+    // Check if the file exists
+    let _pass: Result<(), Error> = check_file_exists(&args);
+
     // Start keeping track of time
     let start_time: Instant = Instant::now();
 
@@ -16,7 +21,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
     let pb: ProgressBar = ProgressBar::new(args.lines);
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} lines ({eta})")
         .unwrap()
-        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{}", human_duration(&state.eta())).unwrap())
+        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{}", format_dhms(state.eta().as_secs())).unwrap())
         .progress_chars("#>-"));
 
     // Create file
@@ -73,7 +78,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
         s.bold().green(),
         &args.path.bold(),
         format!("({})", DecimalBytes(file.metadata().unwrap().len())).bold(),
-        format!("{}", human_duration(&start_time.elapsed())).bold(),
+        format!("{}", format_dhms(start_time.elapsed().as_secs())).bold(),
         (&args.lines * &args.words_per_line).to_formatted_string(&Locale::en).bold(),
         &args.lines.to_formatted_string(&Locale::en).bold(),
         &args.words_per_line.to_formatted_string(&Locale::en).bold()
@@ -81,4 +86,25 @@ pub(crate) fn process_command(args: Args) -> Result<(), anyhow::Error> {
 
     // Return OK
     Ok(())
+}
+
+// Check file existence function
+fn check_file_exists(args: &Args) -> Result<(), Error> {
+    let exists: bool = Path::new(&args.path).exists();
+
+    if exists {
+        let confirmation = Confirm::new()
+            .with_prompt(format!("The file {} already exists, do you want to overwrite this file?", &args.path.bold()))
+            .default(true)
+            .interact()
+            .unwrap();
+        
+        if confirmation {
+            Ok(())
+        } else {
+            process::exit(0)
+        }
+    } else {
+        Ok(())
+    }
 }
