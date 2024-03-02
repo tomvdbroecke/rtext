@@ -1,11 +1,12 @@
 // Uses
+use crate::check_file_exists::check_file_exists;
+use crate::format_time::format_time;
 use random_word::Lang;
 use crate::Args;
-use std::{fs::File, io::{BufWriter, Write}, path::Path, process, time::{Duration, Instant}};
+use std::{fs::File, io::{BufWriter, Write}, time::Instant};
 use num_format::{Locale, ToFormattedString};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressState, DecimalBytes};
-use dialoguer::Confirm;
 use anyhow::Error;
 
 // Process command function
@@ -92,45 +93,4 @@ pub(crate) fn process_command(args: Args) -> Result<(), Error> {
 
     // Return OK
     Ok(())
-}
-
-// Check file existence function
-fn check_file_exists(args: &Args) -> Result<(), Error> {
-    // Check if the file exists
-    let exists: bool = Path::new(&args.path).exists();
-
-    // If the file exists, ask for overwrite confirmation, otherwise exit the program
-    if exists {
-        let confirmation = Confirm::new()
-            .with_prompt(format!("The file {} already exists, do you want to overwrite this file?", &args.path.bold()))
-            .default(true)
-            .interact()
-            .unwrap();
-        
-        if confirmation {
-            Ok(())
-        } else {
-            process::exit(0)
-        }
-    } else {
-        Ok(())
-    }
-}
-
-// Format time function
-fn format_time(&duration: &Duration) -> String {
-    // Calculate the amount of days, hours, minutes and remaining seconds
-    let seconds = duration.as_secs();
-    let days = seconds / (24 * 3600);
-    let hours = (seconds % (24 * 3600)) / 3600;
-    let minutes = (seconds % 3600) / 60;
-    let remaining_seconds = seconds % 60;
-
-    // Match the appropriate format
-    match (days, hours, minutes, remaining_seconds) {
-        (0, 0, 0, s) => format!("{}s", s),
-        (0, 0, m, s) => format!("{}m {}s", m, s),
-        (0, h, m, s) => format!("{}h {}m {}s", h, m, s),
-        (d, h, m, s) => format!("{}d {}h {}m {}s", d, h, m, s),
-    }
 }

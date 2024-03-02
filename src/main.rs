@@ -1,5 +1,7 @@
 // Modules
 mod process_command;
+mod check_file_exists;
+mod format_time;
 
 // Uses
 use clap::{error::ErrorKind, value_parser, CommandFactory, Parser};
