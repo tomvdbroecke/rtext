@@ -44,8 +44,15 @@ pub(crate) fn process_command(args: Args) -> Result<(), Error> {
         // Loop over amount of words
         while w < args.words_per_line {
             // Generate random word and append it to the line
-            let word: &str = random_word::gen(Lang::En);
-            line.push_str(word);
+            if let Some(word_length) = args.word_length {
+                let word = random_word::gen_len(word_length as usize, Lang::En);
+                if let Some(w) = word {
+                    line.push_str(w);
+                }
+            } else {
+                let word: &str = random_word::gen(Lang::En);
+                line.push_str(word);
+            }
 
             // On each but the final word, add a space
             if w + 1 < args.words_per_line {
@@ -89,8 +96,10 @@ pub(crate) fn process_command(args: Args) -> Result<(), Error> {
 
 // Check file existence function
 fn check_file_exists(args: &Args) -> Result<(), Error> {
+    // Check if the file exists
     let exists: bool = Path::new(&args.path).exists();
 
+    // If the file exists, ask for overwrite confirmation, otherwise exit the program
     if exists {
         let confirmation = Confirm::new()
             .with_prompt(format!("The file {} already exists, do you want to overwrite this file?", &args.path.bold()))
@@ -110,12 +119,14 @@ fn check_file_exists(args: &Args) -> Result<(), Error> {
 
 // Format time function
 fn format_time(&duration: &Duration) -> String {
+    // Calculate the amount of days, hours, minutes and remaining seconds
     let seconds = duration.as_secs();
     let days = seconds / (24 * 3600);
     let hours = (seconds % (24 * 3600)) / 3600;
     let minutes = (seconds % 3600) / 60;
     let remaining_seconds = seconds % 60;
 
+    // Match the appropriate format
     match (days, hours, minutes, remaining_seconds) {
         (0, 0, 0, s) => format!("{}s", s),
         (0, 0, m, s) => format!("{}m {}s", m, s),

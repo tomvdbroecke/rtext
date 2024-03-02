@@ -2,7 +2,7 @@
 mod process_command;
 
 // Uses
-use clap::{error::ErrorKind, CommandFactory, Parser};
+use clap::{error::ErrorKind, value_parser, CommandFactory, Parser};
 use process_command::process_command;
 use anyhow::Result;
 
@@ -18,14 +18,9 @@ struct Args {
     words_per_line: u64,
     #[arg(short, long, default_value_t = DEFAULT_AMOUNT_OF_LINES)]
     lines: u64,
+    #[arg(long, value_parser = value_parser!(u8).range(2..=15))]
+    word_length: Option<u8>
 }
-
-/**
- * @todo
- * - Allow passing word length
- * - Add logging? (make sure to add progress bar log bridge)
- * - Remove ms in human_duration somehow (maybe make your own crate with options)
- */
 
 // Main function
 fn main() -> Result<()> {
