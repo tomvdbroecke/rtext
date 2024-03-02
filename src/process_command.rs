@@ -1,11 +1,10 @@
 // Uses
 use random_word::Lang;
 use crate::Args;
-use std::{fs::File, io::{BufWriter, Write}, path::Path, process, time::Instant};
+use std::{fs::File, io::{BufWriter, Write}, path::Path, process, time::{Duration, Instant}};
 use num_format::{Locale, ToFormattedString};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressState, DecimalBytes};
-use compound_duration::format_dhms;
 use dialoguer::Confirm;
 use anyhow::Error;
 
@@ -21,7 +20,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), Error> {
     let pb: ProgressBar = ProgressBar::new(args.lines);
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} lines ({eta})")
         .unwrap()
-        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{}", format_dhms(state.eta().as_secs())).unwrap())
+        .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{}", format_time(&state.eta())).unwrap())
         .progress_chars("#>-"));
 
     // Create file
@@ -78,7 +77,7 @@ pub(crate) fn process_command(args: Args) -> Result<(), Error> {
         s.bold().green(),
         &args.path.bold(),
         format!("({})", DecimalBytes(file.metadata().unwrap().len())).bold(),
-        format!("{}", format_dhms(start_time.elapsed().as_secs())).bold(),
+        format!("{}", format_time(&start_time.elapsed())).bold(),
         (&args.lines * &args.words_per_line).to_formatted_string(&Locale::en).bold(),
         &args.lines.to_formatted_string(&Locale::en).bold(),
         &args.words_per_line.to_formatted_string(&Locale::en).bold()
@@ -106,5 +105,21 @@ fn check_file_exists(args: &Args) -> Result<(), Error> {
         }
     } else {
         Ok(())
+    }
+}
+
+// Format time function
+fn format_time(&duration: &Duration) -> String {
+    let seconds = duration.as_secs();
+    let days = seconds / (24 * 3600);
+    let hours = (seconds % (24 * 3600)) / 3600;
+    let minutes = (seconds % 3600) / 60;
+    let remaining_seconds = seconds % 60;
+
+    match (days, hours, minutes, remaining_seconds) {
+        (0, 0, 0, s) => format!("{}s", s),
+        (0, 0, m, s) => format!("{}m {}s", m, s),
+        (0, h, m, s) => format!("{}h {}m {}s", h, m, s),
+        (d, h, m, s) => format!("{}d {}h {}m {}s", d, h, m, s),
     }
 }
